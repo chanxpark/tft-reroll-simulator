@@ -1,0 +1,32 @@
+.RollBlock {
+    width: 100%;
+    margin: 0;
+    padding: 10px;
+    color: white;
+}
+.rollOptions {
+    padding-top: 10px;
+    padding-bottom: 10px;
+}
+.rollOptions label, input, select {
+    margin-left: 5px;
+    margin-right: 5px;
+}
+.rollResults {
+    display: none;
+    padding-top: 10px;
+    padding-bottom: 10px;
+}
+.rollResults.active {
+    display: block
+}
+.rollResults table {
+    width: 50%;
+    margin-left: auto;
+    margin-right: auto;
+    padding: 20px; 
+    border-collapse: collapse;
+}
+.rollResults th, td {
+    border: 1px solid white; 
+}
