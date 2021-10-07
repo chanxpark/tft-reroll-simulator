@@ -1,34 +1,30 @@
-import React, { useMemo } from 'react'
 import { useTable, useSortBy } from 'react-table'
+
+const columns = [
+    {
+        Header: "Champion",
+        accessor: "Champion",
+        sortType: "alphanumeric",
+    },
+    {
+        Header: "Cost",
+        accessor: "Cost",
+        sortType: "alphanumeric",
+    },
+    {
+        Header: "Appearances",
+        accessor: "Appearances",
+        sortType: "alphanumeric",
+    },
+];
 
 // {Champion: "Senna", Cost: 1, Appearances: 57}
 export function CreateTable(props) {
 
-    console.log(props.data)
-
-    const columns = useMemo(() => [
-        {
-            Header: 'Champion',
-            accessor: 'Champion',
-            sortType: 'alphanumeric'
-        },
-        {
-            Header: 'Cost',
-            accessor: 'Cost',
-            sortType: 'alphanumeric'
-        },
-        {
-            Header: 'Appearances',
-            accessor: 'Appearances',
-            sortType: 'alphanumeric'
-        }
-    ])
-
-
     const tableInstance = useTable(
         {
             columns,
-            data: props.data
+            data: props.data[0]
         },
         useSortBy
     )

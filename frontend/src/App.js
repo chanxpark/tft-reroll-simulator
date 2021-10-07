@@ -11,7 +11,8 @@ class App extends Component {
     super()
 
     this.state = {
-      selectedBlock: 'DropRates'
+      selectedBlock: 'DropRates',
+      dropRatesInfo: []
     }
   }
 
@@ -26,10 +27,12 @@ class App extends Component {
   }
 
   renderRollBlock(selectedBlock) {
+    console.log(selectedBlock)
     const Block = Blocks[selectedBlock]
 
     return <Block />
   }
+
 
   render() {
     return (

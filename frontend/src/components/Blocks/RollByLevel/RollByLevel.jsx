@@ -1,5 +1,5 @@
-import React, { Fragment, Component, useEffect } from "react";
-import { CreateTable } from '../Table.jsx'
+import React, { Component } from "react";
+import { CreateTable } from './Table.jsx'
 import "./RollByLevel.scss";
 
 class RollByLevel extends Component {
