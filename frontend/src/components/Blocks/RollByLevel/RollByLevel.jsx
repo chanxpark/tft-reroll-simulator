@@ -1,5 +1,6 @@
 import React, { Component } from "react";
 import { CreateTable } from './Table.jsx'
+import { store } from 'react-notifications-component';
 import "./RollByLevel.scss";
 
 class RollByLevel extends Component {
@@ -23,12 +24,28 @@ class RollByLevel extends Component {
         const rolls = this.state.rollNums
         const response = await fetch('/api/roll?level=' + level + '&rolls=' + rolls);
         const responseJson = await response.json()
-        // this.setState({ rollResult: [] }) // reset the state
-        this.setState({
-            rollResult: [responseJson],
-            submit: true,
-            showTable: true
-        })
+
+        if (response.ok) {
+            this.setState({
+                rollResult: responseJson,
+                submit: true,
+                showTable: true
+            })
+        } else {
+            console.log(responseJson["message"])
+            store.addNotification({
+                title: "Error",
+                message: responseJson["message"],
+                type: "warning",
+                insert: "top",
+                container: "top-right",
+                dismiss: {
+                    duration: 5000,
+                    onScreen: true,
+                    showIcon: true
+                }
+            })
+        }
     }
 
     render() {

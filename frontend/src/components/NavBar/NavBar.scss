@@ -13,7 +13,7 @@
 }
 
 .nav-menu.active {
-    background-color: white; 
+    background-color: #bdd7e8; 
     overflow: hidden; 
     left: 0; 
     transition: height 1s ease-in-out; 
@@ -28,6 +28,8 @@ ul {
 
 .nav-links {
     display: none;
+    color: #283745;
+    font-weight: bold;
 }
 
 .nav-links.active {
@@ -40,5 +42,5 @@ ul {
 }
 
 .nav-links:hover {
-    background-color: gray; 
+    background-color: #aac0cf; 
 }

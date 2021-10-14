@@ -1,0 +1,19 @@
+.DropRatesBlock{
+    width: 100%;
+    margin: 20px;
+}
+.DropRatesBlock table {
+    width: 50%;
+    margin-left: auto;
+    margin-right: auto;
+    padding: 20px; 
+    border-collapse: collapse;
+}
+.DropRatesBlock td {
+    border: 1px solid white; 
+}
+.DropRatesBlock th {
+    background-color: #bdd7e8;
+    color: black; 
+    border: 1px solid white; 
+}
