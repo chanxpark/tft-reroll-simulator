@@ -206,8 +206,8 @@ func rollLevel(w http.ResponseWriter, r *http.Request) {
 	results, err := roll(level, rollNums)
 	if err != nil {
 		JSONError(w,
-			map[string]string{"message": "Bad Request: Provide a valid number of rolls (number less than 200)"},
-			http.StatusBadRequest)
+			map[string]string{"message": "Internal Server Error: Could not load data."},
+			http.StatusInternalServerError)
 		return
 	}
 
