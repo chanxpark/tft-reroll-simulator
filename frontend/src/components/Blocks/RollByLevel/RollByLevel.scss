@@ -1,8 +1,6 @@
 .RollBlock {
     width: 100%;
-    margin: 0;
-    padding: 10px;
-    color: white;
+    margin: 20px;
 }
 .rollOptions {
     padding-top: 10px;
@@ -21,12 +19,19 @@
     display: block
 }
 .rollResults table {
-    width: 50%;
+    background: #404245;
+    width: 75%;
     margin-left: auto;
     margin-right: auto;
     padding: 20px; 
     border-collapse: collapse;
 }
 .rollResults th, td {
-    border: 1px solid white; 
+    padding: 8px; 
+}
+.rollResults tr {
+    border: 2px solid #283745; 
+}
+.rollResults tbody tr:hover {
+    background-color: #aac0cf;
 }

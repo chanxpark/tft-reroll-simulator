@@ -1,5 +1,9 @@
-html {
-  background-color: #15223b;
+@import url('https://fonts.googleapis.com/css?family=Roboto+Mono&display=swap');
+
+body {
+  background-color: #283745;
+  font-family: Roboto Mono;
+  color: #f8f7f4;
 }
 
 .App {

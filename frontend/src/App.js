@@ -5,6 +5,9 @@ import Header from './components/Header/Header';
 import NavBar from './components/NavBar/NavBar';
 import * as Blocks from './components/Blocks';
 
+import ReactNotification from 'react-notifications-component'
+import 'react-notifications-component/dist/theme.css'
+
 class App extends Component {
 
   constructor() {
@@ -16,27 +19,20 @@ class App extends Component {
     }
   }
 
-  async send() {
-    const response = await fetch('/api');
-
-    console.log(response.json());
-  }
-
   getNavPage = (val) => {
     this.setState({ selectedBlock: val })
   }
 
   renderRollBlock(selectedBlock) {
-    console.log(selectedBlock)
     const Block = Blocks[selectedBlock]
 
     return <Block />
   }
 
-
   render() {
     return (
       <div className="App">
+        <ReactNotification />
         <Header />
         <NavBar returnNavPage={this.getNavPage} />
         {this.renderRollBlock(this.state.selectedBlock)}

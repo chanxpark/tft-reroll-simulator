@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"math"
 	"math/rand"
@@ -14,106 +13,141 @@ import (
 	"time"
 )
 
-// list of champions and number in pool by its cost
-var championsByCost [5][]string
-
 // number of champions per level
 var championPool = [5]int{29, 22, 18, 12, 10}
 
+// list of champions and number in pool by its cost
+type ChampionsByCost = [5][]string
+
 // list of drop rates by level
 // level is first array position + 1, tier is second array position + 1
-var dropRates [9][5]float64
+type DropRates = [9][5]float64
+
+var baseDR DropRates = DropRates{
+	[5]float64{1.00, 0.00, 0.00, 0.00, 0.00},
+	[5]float64{1.00, 0.00, 0.00, 0.00, 0.00},
+	[5]float64{0.75, 0.25, 0.00, 0.00, 0.00},
+	[5]float64{0.55, 0.30, 0.15, 0.00, 0.00},
+	[5]float64{0.45, 0.33, 0.20, 0.02, 0.00},
+	[5]float64{0.25, 0.40, 0.30, 0.05, 0.00},
+	[5]float64{0.19, 0.30, 0.35, 0.15, 0.01},
+	[5]float64{0.15, 0.20, 0.35, 0.25, 0.05},
+	[5]float64{0.10, 0.15, 0.30, 0.30, 0.15},
+}
 
 // results counter
 type rollResult struct {
 	Champion    string
 	Cost        int
 	Appearances int
+	Percentage  string
 }
-
-var rollResults = make(map[string]rollResult)
 
 // data structure for champions.json file
 type Champion struct {
-	Champion   string
+	Name       string
 	ChampionId string
 	Cost       int
+	Traits     []string
 }
 
-// provides the rates to the DropRates global variable
-func assignDropRates() {
-	file, err := os.Open("./data/dropRates.json")
+// convert base drop rates
+func convertDropRates() DropRates {
+	convertedDropRates := baseDR
 
-	if err == nil {
-		bv, _ := ioutil.ReadAll(file)
-		json.Unmarshal(bv, &dropRates)
-	} else { // create file if it does not exist
-		dropRates[0] = [5]float64{1.00, 0.00, 0.00, 0.00, 0.00}
-		dropRates[1] = [5]float64{1.00, 0.00, 0.00, 0.00, 0.00}
-		dropRates[2] = [5]float64{0.75, 0.25, 0.00, 0.00, 0.00}
-		dropRates[3] = [5]float64{0.55, 0.30, 0.15, 0.00, 0.00}
-		dropRates[4] = [5]float64{0.45, 0.33, 0.20, 0.02, 0.00}
-		dropRates[5] = [5]float64{0.25, 0.40, 0.30, 0.05, 0.00}
-		dropRates[6] = [5]float64{0.19, 0.30, 0.35, 0.15, 0.01}
-		dropRates[7] = [5]float64{0.15, 0.20, 0.35, 0.25, 0.05}
-		dropRates[8] = [5]float64{0.10, 0.15, 0.30, 0.30, 0.15}
-
-		for i, s := range dropRates {
-			for i2 := range s {
-				if i2 != 0 {
-					dropRates[i][i2] = math.Round((dropRates[i][i2]+dropRates[i][i2-1])*100) / 100
-				}
+	for i, s := range convertedDropRates {
+		for i2 := range s {
+			if i2 != 0 {
+				convertedDropRates[i][i2] = math.Round((convertedDropRates[i][i2]+convertedDropRates[i][i2-1])*100) / 100
 			}
 		}
-
-		file, _ := json.Marshal(dropRates)
-		_ = ioutil.WriteFile("./data/dropRates.json", file, 0644)
 	}
-	defer file.Close()
+
+	return convertedDropRates
+}
+
+func openDropRatesConv() DropRates {
+	f, err := os.OpenFile("./data/dropRatesConv.json", os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
+	if err != nil {
+		return convertDropRates()
+	}
+	defer f.Close()
+
+	var dr DropRates
+	// The only reason this call would error is if there is malformed JSON, but we are going to overwrite that JSON.
+	if err := json.NewDecoder(f).Decode(&dr); err != nil || len(dr) == 0 {
+		// If there was an error decoding or there is no data, then we overwrite the data with our own.
+		// If there is an error when writing to the file, explicitly ignore it as we've done all we can here, and we can just proceed with the default data set
+		// Though one may wish to omit a warning if this were to happen using a logging package set to trace/debug levels
+		cdr := convertDropRates()
+		_ = json.NewEncoder(f).Encode(cdr)
+		return cdr
+	}
+
+	return dr
 }
 
 // returns a list of champion metadata
-func openChampionsData() []Champion {
-	championsJSON, err := os.Open("./data/champions.json")
-
+func openChampionsData() ([]Champion, error) {
+	f, err := os.Open("./data/champions.json")
 	if err != nil {
-		fmt.Println(err)
+		return nil, err
 	}
-
-	defer championsJSON.Close()
-
-	byteValue, _ := ioutil.ReadAll(championsJSON)
+	defer f.Close()
 
 	var champions []Champion
+	return champions, json.NewDecoder(f).Decode(&champions)
+}
 
-	json.Unmarshal(byteValue, &champions)
+func convertChampionsByCost() (ChampionsByCost, error) {
+	var c ChampionsByCost
+	champions, err := openChampionsData()
+	if err != nil {
+		return ChampionsByCost{}, err
+	}
+	for _, s := range champions {
+		n := s.Cost - 1
+		c[n] = append(c[n], s.Name)
+	}
 
-	return champions
+	return c, nil
 }
 
 // returns a list of champions by cost and the number in pool.
-func getchampionsByCost() {
-	file, err := os.Open("./data/championsByCost.json")
-	if err == nil {
-		bv, _ := ioutil.ReadAll(file)
-		json.Unmarshal(bv, &championsByCost)
-	} else {
-		for _, s := range openChampionsData() {
-			n := s.Cost - 1
-			championsByCost[n] = append(championsByCost[n], s.Champion)
-		}
-
-		file, _ := json.Marshal(championsByCost)
-		_ = ioutil.WriteFile("./data/championsByCost.json", file, 0644)
+func openChampionsByCost() (ChampionsByCost, error) {
+	f, err := os.OpenFile("./data/championsByCost.json", os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
+	if err != nil {
+		return convertChampionsByCost()
 	}
-	defer file.Close()
+	defer f.Close()
 
+	var c ChampionsByCost
+	// The only reason this call would error is if there is malformed JSON, but we are going to overwrite that JSON.
+	if err := json.NewDecoder(f).Decode(&c); err != nil || len(c) == 0 {
+		// If there was an error decoding or there is no data, then we overwrite the data with our own.
+		// If there is an error when writing to the file, explicitly ignore it as we've done all we can here, and we can just proceed with the default data set
+		// Though one may wish to omit a warning if this were to happen using a logging package set to trace/debug levels
+		cCosts, cErr := convertChampionsByCost()
+		_ = json.NewEncoder(f).Encode(cCosts)
+		return cCosts, cErr
+	}
+
+	return c, err
 }
 
 // randomly select 5 champions that are rolled
-func roll(level int, rolls int) {
-	fmt.Println(dropRates)
+func roll(level int, rolls int) (*map[string]rollResult, error) {
+
+	var results = make(map[string]rollResult)
+
 	rand.Seed(time.Now().UnixNano()) // make rand non-deterministic
+	// get meta data
+	dropRates := openDropRatesConv()
+	championsByCost, err := openChampionsByCost()
+	if err != nil {
+		return nil, err
+	}
+
 	// roll the number of times required
 	for r := 0; r < rolls; r++ {
 		// each roll consists of 5 champion selections
@@ -137,13 +171,15 @@ func roll(level int, rolls int) {
 				}
 			}
 
-			if c, ok := rollResults[champion]; ok {
-				rollResults[champion] = rollResult{champion, cost + 1, c.Appearances + 1}
+			if c, ok := results[champion]; ok {
+				results[champion] = rollResult{champion, cost + 1, c.Appearances + 1, ""}
 			} else {
-				rollResults[champion] = rollResult{champion, cost + 1, 1}
+				results[champion] = rollResult{champion, cost + 1, 1, ""}
 			}
 		}
 	}
+
+	return &results, nil
 }
 
 func rollLevel(w http.ResponseWriter, r *http.Request) {
@@ -151,65 +187,79 @@ func rollLevel(w http.ResponseWriter, r *http.Request) {
 	levelStr := r.URL.Query().Get("level") // returns empty string if not found
 	level, err := strconv.Atoi(strings.Trim(levelStr, " "))
 	if err != nil {
-		w.WriteHeader(400)
-		w.Write([]byte("Incomplete request: provide a valid level."))
-		log.Fatalf("Error: invalid level.")
+		JSONError(w,
+			map[string]string{"message": "Bad Request: invalid level"},
+			http.StatusBadRequest)
 		return
 	}
 
 	rollNumsStr := r.URL.Query().Get("rolls") // number of rolls to perform
 	rollNums, err := strconv.Atoi(strings.Trim(rollNumsStr, " "))
-
 	if err != nil || rollNums > 200 {
-		w.WriteHeader(400)
-		w.Write([]byte("Incomplete request: provide a valid number of rolls (number less than 200)."))
-		log.Fatalf("Error: invalid number of rolls.")
+		JSONError(w,
+			map[string]string{"message": "Bad Request: Provide a valid number of rolls (number less than 200)"},
+			http.StatusBadRequest)
 		return
 	}
 
 	// perform rolls
-	assignDropRates()
-	getchampionsByCost()
-	roll(level, rollNums)
-	var rData []rollResult
-	for _, s := range rollResults {
-		rData = append(rData, s)
+	results, err := roll(level, rollNums)
+	if err != nil {
+		JSONError(w,
+			map[string]string{"message": "Internal Server Error: Could not load data."},
+			http.StatusInternalServerError)
+		return
 	}
 
-	// send data back
-	// w.WriteHeader(http.StatusOK)
+	// calculate appearance percentages and prepare results
+	var resp []rollResult
+	for _, s := range *results {
+		s.Percentage = fmt.Sprintf("%.2f%%", (float32(s.Appearances)*100)/(float32(rollNums)*5))
+		resp = append(resp, s)
+	}
+
+	// success; return results
 	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "application/json")
-	jsonResp, err := json.Marshal(rData)
-	if err != nil {
-		log.Fatalf("Error happened in JSON marshal. Err: %s", err)
-	}
-	w.Write(jsonResp)
-
-	// reset the results at the end of each roll
-	rollResults = make(map[string]rollResult)
-
-	fmt.Println(r.URL.Path, level, rollNums)
-	fmt.Println(rData)
+	json.NewEncoder(w).Encode(resp)
 }
 
-func handleRequest(w http.ResponseWriter, r *http.Request) {
-	fmt.Println(r.URL.Query())
-	fmt.Println(r.URL.Path)
+func getDropRates(w http.ResponseWriter, r *http.Request) {
+
+	type rates struct {
+		Level                                           int
+		OneCost, TwoCost, ThreeCost, FourCost, FiveCost string
+	}
+
+	var resp []rates
+
+	for i, s := range baseDR {
+		resp = append(resp, rates{
+			i + 1,
+			fmt.Sprintf("%d%%", int(s[0]*100)),
+			fmt.Sprintf("%d%%", int(s[1]*100)),
+			fmt.Sprintf("%d%%", int(s[2]*100)),
+			fmt.Sprintf("%d%%", int(s[3]*100)),
+			fmt.Sprintf("%d%%", int(s[4]*100)),
+		})
+	}
+
+	// success; return results
 	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "application/json")
-	resp := make(map[string]string)
-	resp["message"] = "Status OK"
-	jsonResp, err := json.Marshal(resp)
-	if err != nil {
-		log.Fatalf("Error happened in JSON marshal. Err: %s", err)
-	}
-	w.Write(jsonResp)
+	json.NewEncoder(w).Encode(resp)
+}
+
+func JSONError(w http.ResponseWriter, message interface{}, code int) {
+	w.WriteHeader(code)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(message)
 }
 
 func main() {
 	http.HandleFunc("/api/roll", rollLevel)
-	http.HandleFunc("/", handleRequest)
+	http.HandleFunc("/api/droprates", getDropRates)
+	http.HandleFunc("/", getDropRates)
 
 	log.Fatal(http.ListenAndServe(":3080", nil))
 }

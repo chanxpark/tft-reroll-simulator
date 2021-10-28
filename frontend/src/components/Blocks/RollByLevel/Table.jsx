@@ -16,6 +16,11 @@ const columns = [
         accessor: "Appearances",
         sortType: "alphanumeric",
     },
+    {
+        Header: "%",
+        accessor: "Percentage",
+        sortType: "alphanumeric",
+    }
 ];
 
 // {Champion: "Senna", Cost: 1, Appearances: 57}
@@ -24,7 +29,7 @@ export function CreateTable(props) {
     const tableInstance = useTable(
         {
             columns,
-            data: props.data[0]
+            data: props.data
         },
         useSortBy
     )
