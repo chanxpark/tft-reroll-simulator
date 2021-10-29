@@ -43,6 +43,11 @@ class NavBar extends Component {
                     >
                         <a>Roll By Level</a>
                     </li>
+                    <li id="RollByChampionSelect" className={this.state.clicked ? 'nav-links active' : 'nav-links'}
+                        onClick={this.handleClick}
+                    >
+                        <a>Roll By Champion</a>
+                    </li>
                 </ul>
             </nav >
         )

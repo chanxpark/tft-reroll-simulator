@@ -1,0 +1,45 @@
+.champion-list {
+    display: flex;
+    flex-wrap: wrap; 
+    margin-top: 10px; 
+    margin-left: 15%; 
+    margin-right: 15%;
+}
+
+.champion-wrapper {
+    margin: 10px;
+    border: 1px solid black;
+}
+
+.champion-wrapper.c1 {
+    border-color:#6c757d;
+}
+
+.champion-wrapper.c2 {
+    border-color:#28a745;
+}
+
+.champion-wrapper.c3 {
+    border-color:#007bff;
+}
+
+.champion-wrapper.c4 {
+    border-color:#6f42c1;
+}
+
+.champion-wrapper.c5 {
+    border-color: #ffc107;
+}
+
+.champion-icon {
+    filter: grayscale(75%); 
+    height: 50px; 
+    width: 50px;
+    display: block;
+}
+
+.champion-icon:hover  {
+    filter: grayscale(0%);
+    cursor: pointer;
+}
+
